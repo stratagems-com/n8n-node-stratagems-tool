@@ -1,10 +1,10 @@
 # Stratagems n8n Nodes
 
-A comprehensive set of n8n community nodes that integrate with the **Stratagems Automation Tools** API. These nodes provide easy access to set tracking, lookup mapping, and app management functionality directly within n8n workflows.
+A comprehensive n8n community node that integrates with the **Stratagems Automation Tools** API. This node provides easy access to set tracking, lookup mapping, and app management functionality directly within n8n workflows.
 
 ## 🎯 **Overview**
 
-The Stratagems n8n nodes enable you to build **reliable**, **idempotent**, and **traceable** automations by providing:
+The Stratagems Tool node enables you to build **reliable**, **idempotent**, and **traceable** automations by providing:
 
 - **🔍 Set Tracking** - Prevent duplicate processing of items
 - **🔗 Lookup Mapping** - Map IDs between different systems (ERP, CRM, Shopify, etc.)
@@ -15,27 +15,20 @@ Perfect for workflows involving data synchronization, order processing, customer
 
 ---
 
-## 📦 **Available Nodes**
+## 📦 **Available Operations**
 
-### **1. Stratagems Set Tracker**
-Track unique values to prevent duplicate processing in workflows.
+The **Stratagems Tool** node provides the following operations:
 
-**Operations:**
+### **Set Operations**
 - `checkSetValues` - Check if values exist in a set
 - `addToSet` - Add values to a set to mark them as processed
 
-### **2. Stratagems Lookup Mapper**
-Create and manage bidirectional ID mappings between different systems.
-
-**Operations:**
-- `addToLookup` - Add ID mappings with optional metadata
-- `searchLookup` - Search for ID mappings
+### **Lookup Operations**
+- `addToLookup` - Add ID mappings to a lookup with optional metadata
+- `searchLookup` - Search for ID mappings in a lookup
 - `fullLookup` - Add to lookup AND automatically track in a set
 
-### **3. Stratagems App Manager**
-Manage application settings and monitor API health.
-
-**Operations:**
+### **App Operations**
 - `getAppInfo` - Retrieve current application information
 - `healthCheck` - Check API health and connectivity
 
@@ -44,7 +37,7 @@ Manage application settings and monitor API health.
 ## 🔐 **Authentication & Credentials**
 
 ### **StratagemsApi Credentials**
-All nodes require authentication using the **StratagemsApi** credentials:
+The node requires authentication using the **StratagemsApi** credentials:
 
 - **Host URL**: Base URL of your Stratagems API instance (e.g., `https://api.yourdomain.com`)
 - **API Key**: Your application's API key (starts with `st_`)
@@ -52,9 +45,9 @@ All nodes require authentication using the **StratagemsApi** credentials:
 
 ---
 
-## 📋 **Detailed Node Documentation**
+## 📋 **Detailed Operation Documentation**
 
-### **Node 1: Stratagems Set Tracker**
+### **Set Operations**
 
 #### **Check Set Values Operation**
 **Purpose**: Check if values exist in a set and optionally filter results.
@@ -70,7 +63,7 @@ All nodes require authentication using the **StratagemsApi** credentials:
   - `all` - Return all items with existence status
   - `existing` - Return only items that exist in set
   - `nonExisting` - Return only items that don't exist in set
-- **Create Set If Missing**: 
+- **Auto Create Set/Lookup**: 
   - `true` - Automatically create set if it doesn't exist
   - `false` - Throw error if set doesn't exist (default)
 
@@ -101,8 +94,7 @@ All nodes require authentication using the **StratagemsApi** credentials:
   - `single` - Add one value per item
   - `bulk` - Add multiple values per item
 - **Value Field**: Field name containing the value to add (default: `value`)
-- **Metadata Fields**: JSON object with metadata fields to include
-- **Create Set If Missing**:
+- **Auto Create Set/Lookup**:
   - `true` - Automatically create set if it doesn't exist
   - `false` - Throw error if set doesn't exist (default)
 
@@ -126,7 +118,7 @@ All nodes require authentication using the **StratagemsApi** credentials:
 }
 ```
 
-### **Node 2: Stratagems Lookup Mapper**
+### **Lookup Operations**
 
 #### **Add to Lookup Operation**
 **Purpose**: Add ID mappings to a lookup with optional metadata.
@@ -138,9 +130,7 @@ All nodes require authentication using the **StratagemsApi** credentials:
   - `bulk` - Add multiple mappings per item
 - **Left Field**: Field name containing the left system ID (default: `left`)
 - **Right Field**: Field name containing the right system ID (default: `right`)
-- **Left Metadata Fields**: JSON object with left system metadata
-- **Right Metadata Fields**: JSON object with right system metadata
-- **Create Lookup If Missing**:
+- **Auto Create Set/Lookup**:
   - `true` - Automatically create lookup if it doesn't exist
   - `false` - Throw error if lookup doesn't exist (default)
 
@@ -178,7 +168,7 @@ All nodes require authentication using the **StratagemsApi** credentials:
   - `both` - Search by both (returns all mappings)
 - **Search Field**: Field name containing the search value (default: `searchValue`)
 - **Limit**: Maximum number of results (default: 50, max: 100)
-- **Create Lookup If Missing**:
+- **Auto Create Set/Lookup**:
   - `true` - Automatically create lookup if it doesn't exist
   - `false` - Throw error if lookup doesn't exist (default)
 
@@ -217,10 +207,8 @@ All nodes require authentication using the **StratagemsApi** credentials:
 - **Left Field**: Field name containing the left system ID (default: `left`)
 - **Right Field**: Field name containing the right system ID (default: `right`)
 - **Set Value Field**: Which field to use for set tracking (`left`, `right`, or custom field)
-- **Left Metadata Fields**: JSON object with left system metadata
-- **Right Metadata Fields**: JSON object with right system metadata
-- **Create Lookup If Missing**: Auto-create lookup if missing
-- **Create Set If Missing**: Auto-create set if missing
+- **Custom Set Value Field**: Custom field name for set tracking (when Set Value Field is 'custom')
+- **Auto Create Set/Lookup**: Auto-create lookup and set if missing
 
 **Input Example:**
 ```json
@@ -243,7 +231,7 @@ All nodes require authentication using the **StratagemsApi** credentials:
 }
 ```
 
-### **Node 3: Stratagems App Manager**
+### **App Operations**
 
 #### **Get App Info Operation**
 **Purpose**: Retrieve current application information.
@@ -281,22 +269,17 @@ All nodes require authentication using the **StratagemsApi** credentials:
 
 ---
 
-## 🔧 **Advanced Configuration Options**
+## 🔧 **Advanced Configuration**
 
-### **Global Settings (All Nodes)**
+### **Auto Create Feature**
+The **Auto Create Set/Lookup** option allows the node to automatically create sets or lookups if they don't exist, eliminating the need for manual setup. This feature is available for all operations that work with sets or lookups.
 
-#### **Error Handling**
-- **Retry on Failure**: Number of retry attempts (default: 3)
-- **Retry Delay**: Delay between retries in milliseconds (default: 1000)
-- **Continue on Error**: Continue processing other items if one fails (default: false)
+### **Mode Options**
+- **Single Mode**: Process one value/mapping per input item
+- **Bulk Mode**: Process multiple values/mappings per input item (useful for batch operations)
 
-#### **Performance**
-- **Batch Size**: Number of items to process in parallel (default: 10)
-- **Timeout**: Request timeout in milliseconds (default: 30000)
-
-#### **Logging**
-- **Log Level**: Debug, Info, Warning, Error (default: Info)
-- **Include Request/Response**: Log full API requests and responses (default: false)
+### **Field Mapping**
+All operations support flexible field mapping, allowing you to specify which fields from your input data should be used for the operation. This makes the node highly adaptable to different data structures.
 
 ---
 
@@ -323,11 +306,10 @@ graph LR
 6. **Update Shopify** - Store BC order number in Shopify for reference
 
 **Node Configuration:**
+- **Operation**: `checkSetValues`
 - **Set Name**: `processed-shopify-orders`
-- **Lookup Name**: `shopify-bc-order-mapping`
 - **Value Field**: `{{$json.id}}` (Shopify order ID)
-- **Left Field**: `{{$json.id}}` (Shopify order ID)
-- **Right Field**: `{{$json.bcOrderNumber}}` (Business Central order number)
+- **Auto Create Set/Lookup**: `true`
 
 ### **Example 2: Business Central → Shopify Customer Sync**
 ```mermaid
@@ -349,37 +331,13 @@ graph LR
 5. **Update BC** - Store Shopify customer ID in BC for future reference
 
 **Node Configuration:**
+- **Operation**: `searchLookup`
 - **Lookup Name**: `bc-shopify-customer-mapping`
 - **Search Type**: `left` (search by BC customer number)
-- **Left Field**: `{{$json.customerNumber}}` (BC customer number)
-- **Right Field**: `{{$json.shopifyCustomerId}}` (Shopify customer ID)
-- **Metadata**: Include customer name, email, phone for reference
+- **Search Field**: `{{$json.customerNumber}}` (BC customer number)
+- **Auto Create Set/Lookup**: `true`
 
-### **Example 3: Inventory Sync with Duplicate Prevention**
-```mermaid
-graph LR
-    A[Shopify Inventory Update] --> B[Check Set: synced-inventory]
-    B --> C{Inventory Already Synced?}
-    C -->|No| D[Update BC Inventory]
-    D --> E[Add to Set: synced-inventory]
-    D --> F[Add to Lookup: inventory-mapping]
-    C -->|Yes| G[Skip Sync]
-```
-
-**Workflow Steps:**
-1. **Shopify inventory webhook** triggers on stock level change
-2. **Check Set** - Ensure this inventory update hasn't been processed
-3. **Update Business Central** - Sync inventory levels
-4. **Add to Set** - Mark as processed to prevent duplicate syncs
-5. **Add to Lookup** - Map Shopify product ID to BC item number
-
-**Node Configuration:**
-- **Set Name**: `synced-inventory`
-- **Lookup Name**: `shopify-bc-inventory-mapping`
-- **Value Field**: `{{$json.productId}}_{{$json.locationId}}` (unique inventory key)
-- **Metadata**: Include timestamp, quantity, location for audit trail
-
-### **Example 4: Full Customer Sync with Error Handling**
+### **Example 3: Full Customer Sync with Set Tracking**
 ```mermaid
 graph LR
     A[BC Customer Data] --> B[Full Lookup: customer-sync]
@@ -398,39 +356,40 @@ graph LR
 5. **Alerts** - Notify on persistent failures
 
 **Node Configuration:**
+- **Operation**: `fullLookup`
 - **Lookup Name**: `bc-shopify-customer-mapping`
 - **Set Name**: `synced-customers`
 - **Set Value Field**: `left` (use BC customer number for tracking)
-- **Auto-create**: Both lookup and set if missing
-- **Metadata**: Include sync timestamp, source system, status
-
-### **Example 5: Order Status Sync with Business Logic**
-```mermaid
-graph LR
-    A[BC Order Status Change] --> B[Check Set: status-updates]
-    B --> C{Status Already Synced?}
-    C -->|No| D[Update Shopify Order Status]
-    D --> E[Add to Set: status-updates]
-    D --> F[Send Customer Notification]
-    C -->|Yes| G[Skip Update]
-```
-
-**Workflow Steps:**
-1. **Business Central** order status changes (e.g., "Shipped")
-2. **Check Set** - Prevent duplicate status updates
-3. **Update Shopify** - Sync status to Shopify order
-4. **Add to Set** - Mark status update as processed
-5. **Customer Notification** - Send email/SMS to customer
-
-**Node Configuration:**
-- **Set Name**: `status-updates`
-- **Value Field**: `{{$json.orderNumber}}_{{$json.status}}` (unique status update key)
-- **Metadata**: Include timestamp, previous status, new status
-- **Filter Mode**: `nonExisting` (only process new status changes)
+- **Auto Create Set/Lookup**: `true`
 
 ---
 
 ## 🚀 **Installation**
+
+### **Option 1: Docker (Recommended)**
+
+1. **Clone this repository**
+   ```bash
+   git clone https://github.com/your-org/n8n-nodes-stratagems.git
+   cd n8n-nodes-stratagems
+   ```
+
+2. **Build the nodes**
+   ```bash
+   npm run build
+   ```
+
+3. **Start n8n with Docker**
+   ```bash
+   ./start-n8n.sh
+   ```
+
+4. **Stop n8n**
+   ```bash
+   ./stop-n8n.sh
+   ```
+
+### **Option 2: Manual Installation**
 
 1. **Clone this repository**
    ```bash
@@ -469,17 +428,35 @@ graph LR
 ```
 n8n-node/
 ├── nodes/
-│   ├── BasicProcessor/          # (existing sample)
-│   ├── StratagemsSet/          # Set tracking operations
-│   ├── StratagemsLookup/       # Lookup mapping operations
-│   └── StratagemsApp/          # App management operations
+│   └── StratagemsTool/
+│       ├── operations/
+│       │   ├── addToLookup.ts
+│       │   ├── addToSet.ts
+│       │   ├── checkSetValues.ts
+│       │   ├── fullLookup.ts
+│       │   ├── getAppInfo.ts
+│       │   ├── healthCheck.ts
+│       │   ├── searchLookup.ts
+│       │   └── index.ts
+│       ├── utils/
+│       │   └── httpClient.ts
+│       ├── StratagemsTool.node.ts
+│       └── stratagemsTool.svg
 ├── credentials/
-│   └── StratagemsApi.ts        # API authentication
-└── docs/
-    ├── StratagemsSet.md        # Set node documentation
-    ├── StratagemsLookup.md     # Lookup node documentation
-    └── StratagemsApp.md        # App node documentation
+│   └── StratagemsApi.credentials.ts
+├── dist/                    # Built files
+├── docker-compose.yml       # Docker configuration
+├── start-n8n.sh            # Start script
+├── stop-n8n.sh             # Stop script
+└── package.json
 ```
+
+### **Architecture**
+The node is built with a modular architecture:
+- **Main Node**: `StratagemsTool.node.ts` - Handles UI configuration and operation routing
+- **Operations**: Individual files for each operation type, imported from `operations/index.ts`
+- **Utilities**: Shared HTTP client and helper functions
+- **Credentials**: Authentication configuration for the Stratagems API
 
 ---
 
@@ -504,116 +481,20 @@ n8n-node/
 - Metadata: JSON objects
 - Bulk operations: Max 1000 items per request
 
-### **Error Codes**
+### **Error Handling**
+The node includes comprehensive error handling for:
+- Authentication failures
+- Network connectivity issues
+- API rate limiting
+- Invalid data formats
+- Missing required fields
+- Resource not found errors
 
-#### **Authentication Errors**
-- `MISSING_API_KEY` - No API key provided in request headers
-- `INVALID_API_KEY` - Provided API key is not valid
-- `INACTIVE_API_KEY` - API key exists but is marked as inactive
-- `EXPIRED_API_KEY` - API key has passed its expiration date
-- `AUTH_ERROR` - General authentication/authorization error
-
-#### **Set Operation Errors**
-- `SET_NOT_FOUND` - Specified set doesn't exist
-- `DUPLICATE_SET` - Set with the same name already exists
-- `SET_VALUE_TOO_LONG` - Value exceeds maximum length (255 characters)
-- `SET_NAME_INVALID` - Set name contains invalid characters (only alphanumeric, hyphens, underscores allowed)
-- `SET_DESCRIPTION_TOO_LONG` - Set description exceeds maximum length (500 characters)
-- `SET_VALUE_REQUIRED` - Value field is required but not provided
-- `SET_BULK_LIMIT_EXCEEDED` - Bulk operation exceeds maximum limit (1000 items)
-- `SET_EMPTY_BULK_REQUEST` - Bulk operation contains no values
-- `SET_VALUE_ID_NOT_FOUND` - Specified value ID doesn't exist in the set
-- `SET_STRICT_CHECKING_VIOLATION` - Strict checking enabled but validation failed
-
-#### **Lookup Operation Errors**
-- `LOOKUP_NOT_FOUND` - Specified lookup doesn't exist
-- `DUPLICATE_LOOKUP` - Lookup with the same name already exists
-- `LOOKUP_NAME_INVALID` - Lookup name contains invalid characters
-- `LOOKUP_DESCRIPTION_TOO_LONG` - Lookup description exceeds maximum length
-- `LOOKUP_LEFT_VALUE_REQUIRED` - Left value is required but not provided
-- `LOOKUP_RIGHT_VALUE_REQUIRED` - Right value is required but not provided
-- `LOOKUP_LEFT_VALUE_TOO_LONG` - Left value exceeds maximum length
-- `LOOKUP_RIGHT_VALUE_TOO_LONG` - Right value exceeds maximum length
-- `LOOKUP_BULK_LIMIT_EXCEEDED` - Bulk operation exceeds maximum limit (1000 items)
-- `LOOKUP_EMPTY_BULK_REQUEST` - Bulk operation contains no values
-- `LOOKUP_VALUE_ID_NOT_FOUND` - Specified value ID doesn't exist in the lookup
-- `LOOKUP_DUPLICATE_LEFT_RIGHT_PAIR` - Left-right pair already exists (when duplicates not allowed)
-- `LOOKUP_DUPLICATE_LEFT_VALUE` - Left value already exists (when duplicates not allowed)
-- `LOOKUP_DUPLICATE_RIGHT_VALUE` - Right value already exists (when duplicates not allowed)
-- `LOOKUP_STRICT_CHECKING_VIOLATION` - Strict checking enabled but validation failed
-- `LOOKUP_SEARCH_PARAMETERS_INVALID` - Invalid search parameters provided
-- `LOOKUP_SEARCH_LIMIT_EXCEEDED` - Search limit exceeds maximum (100 items)
-
-#### **App Management Errors**
-- `APP_NOT_FOUND` - Specified app doesn't exist
-- `DUPLICATE_APP` - App with the same name already exists
-- `APP_NAME_INVALID` - App name contains invalid characters
-- `APP_DESCRIPTION_TOO_LONG` - App description exceeds maximum length
-- `APP_INACTIVE` - App is marked as inactive
-- `APP_PERMISSION_DENIED` - App doesn't have required permissions
-- `APP_API_KEY_GENERATION_FAILED` - Failed to generate new API key
-- `APP_UPDATE_FAILED` - Failed to update app information
-- `APP_DELETE_FAILED` - Failed to delete app
-
-#### **Validation Errors**
-- `VALIDATION_ERROR` - General validation error
-- `REQUIRED_FIELD_MISSING` - Required field is missing from request
-- `FIELD_TYPE_INVALID` - Field contains invalid data type
-- `FIELD_LENGTH_EXCEEDED` - Field value exceeds maximum length
-- `FIELD_FORMAT_INVALID` - Field value has invalid format
-- `JSON_PARSE_ERROR` - Invalid JSON in request body
-- `QUERY_PARAMETER_INVALID` - Invalid query parameter value
-- `PATH_PARAMETER_INVALID` - Invalid path parameter value
-
-#### **Network & Infrastructure Errors**
-- `CONNECTION_TIMEOUT` - Request timed out
-- `CONNECTION_REFUSED` - Unable to connect to server
-- `DNS_RESOLUTION_FAILED` - Failed to resolve hostname
-- `SSL_CERTIFICATE_ERROR` - SSL certificate validation failed
-- `RATE_LIMIT_EXCEEDED` - Too many requests in time window
-- `SERVICE_UNAVAILABLE` - Service temporarily unavailable
-- `GATEWAY_TIMEOUT` - Upstream service timeout
-- `BAD_GATEWAY` - Invalid response from upstream service
-
-#### **Database & Storage Errors**
-- `DATABASE_CONNECTION_ERROR` - Unable to connect to database
-- `DATABASE_QUERY_ERROR` - Database query failed
-- `DATABASE_TRANSACTION_ERROR` - Database transaction failed
-- `STORAGE_FULL` - Storage quota exceeded
-- `DATA_CORRUPTION` - Data integrity check failed
-- `BACKUP_RESTORE_ERROR` - Backup/restore operation failed
-
-#### **Business Logic Errors**
-- `RESOURCE_LOCKED` - Resource is currently locked by another process
-- `CONCURRENT_MODIFICATION` - Resource was modified by another request
-- `BUSINESS_RULE_VIOLATION` - Operation violates business rules
-- `WORKFLOW_STATE_INVALID` - Invalid workflow state for operation
-- `DEPENDENCY_MISSING` - Required dependency not available
-- `CONFIGURATION_ERROR` - Invalid configuration detected
-
-#### **n8n Node Specific Errors**
-- `NODE_CONFIGURATION_ERROR` - Invalid node configuration
-- `CREDENTIALS_MISSING` - Required credentials not configured
-- `CREDENTIALS_INVALID` - Invalid credentials format
-- `INPUT_DATA_INVALID` - Invalid input data format
-- `OUTPUT_FIELD_MISSING` - Required output field not found
-- `BULK_OPERATION_FAILED` - Bulk operation partially failed
-- `RETRY_LIMIT_EXCEEDED` - Maximum retry attempts reached
-- `NODE_EXECUTION_TIMEOUT` - Node execution timed out
-- `WORKFLOW_CONTEXT_ERROR` - Error accessing workflow context
-- `EXPRESSION_EVALUATION_ERROR` - Error evaluating n8n expression
-
-#### **General System Errors**
-- `INTERNAL_ERROR` - Unexpected internal server error
-- `NOT_IMPLEMENTED` - Requested feature not implemented
-- `MAINTENANCE_MODE` - System is in maintenance mode
-- `VERSION_DEPRECATED` - API version is deprecated
-- `UPGRADE_REQUIRED` - Client upgrade required
-- `FEATURE_DISABLED` - Requested feature is disabled
-- `QUOTA_EXCEEDED` - Usage quota exceeded
-- `LICENSE_EXPIRED` - License has expired
-- `SYSTEM_OVERLOAD` - System is overloaded
-- `EMERGENCY_MODE` - System is in emergency mode
+### **Performance Features**
+- **Bulk Operations**: Process multiple items efficiently
+- **Auto-retry**: Built-in retry logic for transient failures
+- **Connection Pooling**: Reuse HTTP connections for better performance
+- **Error Recovery**: Graceful handling of partial failures in bulk operations
 
 ---
 
@@ -630,6 +511,7 @@ n8n-node/
 - Write tests for new features
 - Update documentation as needed
 - Use conventional commit messages
+- Maintain modular architecture with separate operation files
 
 ---
 

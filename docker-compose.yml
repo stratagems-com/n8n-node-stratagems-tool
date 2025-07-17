@@ -19,7 +19,7 @@ services:
       - GENERIC_TIMEZONE=UTC
     volumes:
       - n8n_data:/home/node/.n8n
-      - ./dist/nodes/StratagemsTool:/home/node/.n8n/custom/nodes/StratagemsTool
+      - ./dist:/home/node/.n8n/custom
     networks:
       - n8n_network
 

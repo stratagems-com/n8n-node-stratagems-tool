@@ -6,13 +6,23 @@ import {
     type INodeTypeDescription,
 } from 'n8n-workflow';
 
+import {
+    executeAddToLookup,
+    executeAddToSet,
+    executeCheckSetValues,
+    executeFullLookup,
+    executeGetAppInfo,
+    executeHealthCheck,
+    executeSearchLookup,
+} from './operations';
+
 export class StratagemsTool implements INodeType {
     description: INodeTypeDescription = {
         displayName: 'Stratagems Tool',
         name: 'stratagemsTool',
         icon: 'file:stratagemsTool.svg',
         group: ['transform'],
-        version: 1,
+        version: 2,
         description: 'Integrate with Stratagems Automation Tools for set tracking, lookup mapping, and app management',
         defaults: {
             name: 'Stratagems Tool',
@@ -317,143 +327,18 @@ export class StratagemsTool implements INodeType {
                     },
                 },
             },
-            // Metadata Fields (for set and lookup operations)
-            {
-                displayName: 'Metadata Fields',
-                name: 'metadataFields',
-                type: 'fixedCollection',
-                typeOptions: {
-                    multipleValues: false,
-                },
-                default: {},
-                options: [
-                    {
-                        name: 'metadata',
-                        displayName: 'Metadata',
-                        values: [
-                            {
-                                displayName: 'Include Timestamp',
-                                name: 'includeTimestamp',
-                                type: 'boolean',
-                                default: true,
-                                description: 'Include current timestamp in metadata',
-                            },
-                            {
-                                displayName: 'Additional Fields',
-                                name: 'additionalFields',
-                                type: 'string',
-                                default: '',
-                                placeholder: 'field1,field2,field3',
-                                description: 'Comma-separated list of additional fields to include in metadata',
-                            },
-                        ],
-                    },
-                ],
-                displayOptions: {
-                    show: {
-                        operation: ['addToSet', 'addToLookup', 'fullLookup'],
-                    },
-                },
-            },
-            // Auto-create options
-            {
-                displayName: 'Auto-create Options',
-                name: 'autoCreateOptions',
-                type: 'fixedCollection',
-                typeOptions: {
-                    multipleValues: false,
-                },
-                default: {},
-                options: [
-                    {
-                        name: 'autoCreate',
-                        displayName: 'Auto-create',
-                        values: [
-                            {
-                                displayName: 'Create Set If Missing',
-                                name: 'createSetIfMissing',
-                                type: 'boolean',
-                                default: false,
-                                description: 'Automatically create set if it doesn\'t exist',
-                                displayOptions: {
-                                    show: {
-                                        operation: ['checkSetValues', 'addToSet', 'fullLookup'],
-                                    },
-                                },
-                            },
-                            {
-                                displayName: 'Create Lookup If Missing',
-                                name: 'createLookupIfMissing',
-                                type: 'boolean',
-                                default: false,
-                                description: 'Automatically create lookup if it doesn\'t exist',
-                                displayOptions: {
-                                    show: {
-                                        operation: ['addToLookup', 'searchLookup', 'fullLookup'],
-                                    },
-                                },
-                            },
-                        ],
-                    },
-                ],
-            },
             // Advanced Settings
             {
-                displayName: 'Advanced Settings',
-                name: 'advancedSettings',
-                type: 'fixedCollection',
-                typeOptions: {
-                    multipleValues: false,
-                },
-                default: {},
-                options: [
-                    {
-                        name: 'advanced',
-                        displayName: 'Advanced',
-                        values: [
-                            {
-                                displayName: 'Retry on Failure',
-                                name: 'retryOnFailure',
-                                type: 'number',
-                                default: 3,
-                                description: 'Number of retry attempts',
-                                typeOptions: {
-                                    minValue: 0,
-                                    maxValue: 10,
-                                },
-                            },
-                            {
-                                displayName: 'Retry Delay (ms)',
-                                name: 'retryDelay',
-                                type: 'number',
-                                default: 1000,
-                                description: 'Delay between retries in milliseconds',
-                                typeOptions: {
-                                    minValue: 100,
-                                    maxValue: 10000,
-                                },
-                            },
-                            {
-                                displayName: 'Continue on Error',
-                                name: 'continueOnError',
-                                type: 'boolean',
-                                default: false,
-                                description: 'Continue processing other items if one fails',
-                            },
-                            {
-                                displayName: 'Timeout (ms)',
-                                name: 'timeout',
-                                type: 'number',
-                                default: 30000,
-                                description: 'Request timeout in milliseconds',
-                                typeOptions: {
-                                    minValue: 5000,
-                                    maxValue: 120000,
-                                },
-                            },
-                        ],
+                displayName: 'Auto Create Set/Lookup',
+                name: 'autoCreate',
+                type: 'boolean',
+                default: false,
+                description: 'Automatically create set or lookup if it doesn\'t exist (based on operation)',
+                displayOptions: {
+                    show: {
+                        operation: ['checkSetValues', 'addToSet', 'addToLookup', 'searchLookup', 'fullLookup'],
                     },
-                ],
+                },
             },
         ],
     };
@@ -464,37 +349,32 @@ export class StratagemsTool implements INodeType {
 
         for (let i = 0; i < items.length; i++) {
             const operation = this.getNodeParameter('operation', i) as string;
-            const advancedSettings = this.getNodeParameter('advancedSettings', i, {}) as any;
-            const retryOnFailure = advancedSettings?.advanced?.retryOnFailure || 3;
-            const retryDelay = advancedSettings?.advanced?.retryDelay || 1000;
-            const continueOnError = advancedSettings?.advanced?.continueOnError || false;
-            const timeout = advancedSettings?.advanced?.timeout || 30000;
+            const autoCreate = this.getNodeParameter('autoCreate', i) as boolean;
 
             try {
-
                 let result: any;
 
                 switch (operation) {
                     case 'checkSetValues':
-                        result = await (this as any).executeCheckSetValues(i, retryOnFailure, retryDelay, timeout);
+                        result = await executeCheckSetValues.call(this, i, autoCreate);
                         break;
                     case 'addToSet':
-                        result = await (this as any).executeAddToSet(i, retryOnFailure, retryDelay, timeout);
+                        result = await executeAddToSet.call(this, i, autoCreate);
                         break;
                     case 'addToLookup':
-                        result = await (this as any).executeAddToLookup(i, retryOnFailure, retryDelay, timeout);
+                        result = await executeAddToLookup.call(this, i, autoCreate);
                         break;
                     case 'searchLookup':
-                        result = await (this as any).executeSearchLookup(i, retryOnFailure, retryDelay, timeout);
+                        result = await executeSearchLookup.call(this, i, autoCreate);
                         break;
                     case 'fullLookup':
-                        result = await (this as any).executeFullLookup(i, retryOnFailure, retryDelay, timeout);
+                        result = await executeFullLookup.call(this, i, autoCreate);
                         break;
                     case 'getAppInfo':
-                        result = await (this as any).executeGetAppInfo(i, retryOnFailure, retryDelay, timeout);
+                        result = await executeGetAppInfo.call(this, i);
                         break;
                     case 'healthCheck':
-                        result = await (this as any).executeHealthCheck(i, retryOnFailure, retryDelay, timeout);
+                        result = await executeHealthCheck.call(this, i);
                         break;
                     default:
                         throw new Error(`Unknown operation: ${operation}`);
@@ -509,177 +389,11 @@ export class StratagemsTool implements INodeType {
 
                 returnData.push(newItem);
             } catch (error) {
-                if (advancedSettings?.advanced?.continueOnError) {
-                    // Add error information to the item and continue
-                    const errorItem: INodeExecutionData = {
-                        json: {
-                            ...items[i].json,
-                            error: error instanceof Error ? error.message : 'Unknown error',
-                            success: false,
-                        },
-                    };
-                    returnData.push(errorItem);
-                } else {
-                    // Re-throw the error to stop processing
-                    throw error;
-                }
+                // Re-throw the error to stop processing
+                throw error;
             }
         }
 
         return [returnData];
-    }
-
-    private async executeCheckSetValues(
-        this: IExecuteFunctions,
-        itemIndex: number,
-        retryOnFailure: number,
-        retryDelay: number,
-        timeout: number,
-    ): Promise<any> {
-        const setName = this.getNodeParameter('setName', itemIndex) as string;
-        const mode = this.getNodeParameter('mode', itemIndex) as string;
-        const valueField = this.getNodeParameter('valueField', itemIndex) as string;
-        const outputField = this.getNodeParameter('outputField', itemIndex) as string;
-        const filterMode = this.getNodeParameter('filterMode', itemIndex) as string;
-        const autoCreateOptions = this.getNodeParameter('autoCreateOptions', itemIndex, {}) as any;
-        const createSetIfMissing = autoCreateOptions?.autoCreate?.createSetIfMissing || false;
-
-        // Implementation will be added here
-        return {
-            [outputField]: true,
-            checkedValue: 'sample-value',
-            operation: 'checkSetValues',
-        };
-    }
-
-    private async executeAddToSet(
-        this: IExecuteFunctions,
-        itemIndex: number,
-        retryOnFailure: number,
-        retryDelay: number,
-        timeout: number,
-    ): Promise<any> {
-        const setName = this.getNodeParameter('setName', itemIndex) as string;
-        const mode = this.getNodeParameter('mode', itemIndex) as string;
-        const valueField = this.getNodeParameter('valueField', itemIndex) as string;
-        const metadataFields = this.getNodeParameter('metadataFields', itemIndex, {}) as any;
-        const autoCreateOptions = this.getNodeParameter('autoCreateOptions', itemIndex, {}) as any;
-        const createSetIfMissing = autoCreateOptions?.autoCreate?.createSetIfMissing || false;
-
-        // Implementation will be added here
-        return {
-            addedToSet: true,
-            setValue: 'sample-value',
-            operation: 'addToSet',
-        };
-    }
-
-    private async executeAddToLookup(
-        this: IExecuteFunctions,
-        itemIndex: number,
-        retryOnFailure: number,
-        retryDelay: number,
-        timeout: number,
-    ): Promise<any> {
-        const lookupName = this.getNodeParameter('lookupName', itemIndex) as string;
-        const mode = this.getNodeParameter('mode', itemIndex) as string;
-        const leftField = this.getNodeParameter('leftField', itemIndex) as string;
-        const rightField = this.getNodeParameter('rightField', itemIndex) as string;
-        const metadataFields = this.getNodeParameter('metadataFields', itemIndex, {}) as any;
-        const autoCreateOptions = this.getNodeParameter('autoCreateOptions', itemIndex, {}) as any;
-        const createLookupIfMissing = autoCreateOptions?.autoCreate?.createLookupIfMissing || false;
-
-        // Implementation will be added here
-        return {
-            mappingAdded: true,
-            leftValue: 'sample-left',
-            rightValue: 'sample-right',
-            operation: 'addToLookup',
-        };
-    }
-
-    private async executeSearchLookup(
-        this: IExecuteFunctions,
-        itemIndex: number,
-        retryOnFailure: number,
-        retryDelay: number,
-        timeout: number,
-    ): Promise<any> {
-        const lookupName = this.getNodeParameter('lookupName', itemIndex) as string;
-        const searchType = this.getNodeParameter('searchType', itemIndex) as string;
-        const searchField = this.getNodeParameter('searchField', itemIndex) as string;
-        const limit = this.getNodeParameter('limit', itemIndex) as number;
-        const autoCreateOptions = this.getNodeParameter('autoCreateOptions', itemIndex, {}) as any;
-        const createLookupIfMissing = autoCreateOptions?.autoCreate?.createLookupIfMissing || false;
-
-        // Implementation will be added here
-        return {
-            results: [],
-            totalFound: 0,
-            operation: 'searchLookup',
-        };
-    }
-
-    private async executeFullLookup(
-        this: IExecuteFunctions,
-        itemIndex: number,
-        retryOnFailure: number,
-        retryDelay: number,
-        timeout: number,
-    ): Promise<any> {
-        const lookupName = this.getNodeParameter('lookupName', itemIndex) as string;
-        const setName = this.getNodeParameter('setName', itemIndex) as string;
-        const mode = this.getNodeParameter('mode', itemIndex) as string;
-        const leftField = this.getNodeParameter('leftField', itemIndex) as string;
-        const rightField = this.getNodeParameter('rightField', itemIndex) as string;
-        const setValueField = this.getNodeParameter('setValueField', itemIndex) as string;
-        const customSetValueField = this.getNodeParameter('customSetValueField', itemIndex) as string;
-        const metadataFields = this.getNodeParameter('metadataFields', itemIndex, {}) as any;
-        const autoCreateOptions = this.getNodeParameter('autoCreateOptions', itemIndex, {}) as any;
-        const createLookupIfMissing = autoCreateOptions?.autoCreate?.createLookupIfMissing || false;
-        const createSetIfMissing = autoCreateOptions?.autoCreate?.createSetIfMissing || false;
-
-        // Implementation will be added here
-        return {
-            mappingAdded: true,
-            setTrackingAdded: true,
-            trackedValue: 'sample-value',
-            operation: 'fullLookup',
-        };
-    }
-
-    private async executeGetAppInfo(
-        this: IExecuteFunctions,
-        itemIndex: number,
-        retryOnFailure: number,
-        retryDelay: number,
-        timeout: number,
-    ): Promise<any> {
-        // Implementation will be added here
-        return {
-            appInfo: {
-                id: 'sample-app-id',
-                name: 'Sample App',
-                isActive: true,
-            },
-            operation: 'getAppInfo',
-        };
-    }
-
-    private async executeHealthCheck(
-        this: IExecuteFunctions,
-        itemIndex: number,
-        retryOnFailure: number,
-        retryDelay: number,
-        timeout: number,
-    ): Promise<any> {
-        // Implementation will be added here
-        return {
-            health: {
-                status: 'healthy',
-                timestamp: new Date().toISOString(),
-            },
-            operation: 'healthCheck',
-        };
     }
 } 
