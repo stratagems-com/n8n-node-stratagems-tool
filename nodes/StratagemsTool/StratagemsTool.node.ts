@@ -140,7 +140,7 @@ export class StratagemsTool implements INodeType {
                 default: 'single',
                 displayOptions: {
                     show: {
-                        operation: ['checkSetValues', 'addToSet', 'addToLookup', 'fullLookup'],
+                        operation: [],
                     },
                 },
             },
@@ -162,7 +162,7 @@ export class StratagemsTool implements INodeType {
                 displayName: 'Output Field',
                 name: 'outputField',
                 type: 'string',
-                default: 'exists',
+                default: '',
                 description: 'Field name for the result',
                 displayOptions: {
                     show: {
@@ -343,7 +343,7 @@ export class StratagemsTool implements INodeType {
         ],
     };
 
-    async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+    async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][] | null> {
         const items = this.getInputData();
         const returnData: INodeExecutionData[] = [];
 
@@ -380,13 +380,22 @@ export class StratagemsTool implements INodeType {
                         throw new Error(`Unknown operation: ${operation}`);
                 }
 
-                const newItem: INodeExecutionData = {
-                    json: {
-                        ...items[i].json,
-                        ...result,
-                    },
-                };
+                // Handle different result types
+                if (result === null || result === undefined) {
+                    // Skip this item completely - don't add to returnData
+                    continue;
+                }
 
+                // Handle empty objects
+                if (typeof result === 'object' && Object.keys(result).length === 0) {
+                    // Skip empty objects too
+                    continue;
+                }
+
+                // Add valid results
+                const newItem: INodeExecutionData = {
+                    json: result,
+                };
                 returnData.push(newItem);
             } catch (error) {
                 // Re-throw the error to stop processing
@@ -394,6 +403,7 @@ export class StratagemsTool implements INodeType {
             }
         }
 
+        // Return empty array if no items passed the filter
         return [returnData];
     }
 } 

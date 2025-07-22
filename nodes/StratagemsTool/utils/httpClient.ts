@@ -26,11 +26,31 @@ export class StratagemsHttpClient {
         endpoint: string,
         data?: any,
     ): Promise<ApiResponse<T>> {
+        console.log(`🔍 [Stratagems HTTP] ${method} ${endpoint}`, data ? `with data: ${JSON.stringify(data)}` : '');
+
         const { timeout = 30000, retryOnFailure = 3, retryDelay = 1000 } = this.options;
         let lastError: any;
 
         for (let attempt = 0; attempt <= retryOnFailure; attempt++) {
             try {
+                if (attempt > 0) {
+                    console.log(`🔍 [Stratagems HTTP] Retry attempt ${attempt + 1}/${retryOnFailure + 1}`);
+                }
+
+                // Get credentials for API key
+                const credentials = await this.executeFunctions.getCredentials('stratagemsApi');
+                const apiKey = credentials.apiKey as string;
+
+                if (!apiKey) {
+                    console.log('🔍 [Stratagems HTTP] WARNING: No API key found in credentials!');
+                } else {
+                    // Log masked API key for debugging (only show first 4 chars)
+                    const maskedKey = apiKey.length > 4
+                        ? `${apiKey.substring(0, 4)}...`
+                        : '****';
+                    console.log(`🔍 [Stratagems HTTP] Using API Key: ${maskedKey}`);
+                }
+
                 const response = await this.executeFunctions.helpers.httpRequest({
                     method,
                     url: endpoint,
@@ -38,24 +58,30 @@ export class StratagemsHttpClient {
                     timeout,
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-Api-Key': apiKey || '',  // Add API key to headers
                     },
                 });
 
+                console.log(`🔍 [Stratagems HTTP] Response status: ${response.status || 'N/A'}`);
                 return response as ApiResponse<T>;
             } catch (error: any) {
                 lastError = error;
+                console.log(`🔍 [Stratagems HTTP] Error on attempt ${attempt + 1}:`, error.message);
 
                 // Don't retry on client errors (4xx) except for rate limiting
                 if (error.response?.status >= 400 && error.response?.status < 500 && error.response?.status !== 429) {
+                    console.log(`🔍 [Stratagems HTTP] Client error (${error.response?.status}), not retrying`);
                     throw this.formatError(error);
                 }
 
                 // Don't retry on last attempt
                 if (attempt === retryOnFailure) {
+                    console.log(`🔍 [Stratagems HTTP] Max retries reached, giving up`);
                     throw this.formatError(error);
                 }
 
                 // Wait before retrying
+                console.log(`🔍 [Stratagems HTTP] Waiting ${retryDelay}ms before retry...`);
                 await new Promise(resolve => setTimeout(resolve, retryDelay));
             }
         }
@@ -64,11 +90,13 @@ export class StratagemsHttpClient {
     }
 
     private formatError(error: any): Error {
+        console.log('🔍 [Stratagems HTTP] Formatting error:', error);
+
         if (error.response?.data) {
             const apiError = error.response.data;
-            return new Error(
-                `API Error (${error.response.status}): ${apiError.error || 'Unknown error'} - Code: ${apiError.code || 'UNKNOWN'}`,
-            );
+            const errorMessage = `API Error (${error.response.status}): ${apiError.error || 'Unknown error'} - Code: ${apiError.code || 'UNKNOWN'}`;
+            console.log('🔍 [Stratagems HTTP] Formatted API error:', errorMessage);
+            return new Error(errorMessage);
         }
 
         if (error.code === 'ECONNABORTED') {
@@ -83,19 +111,32 @@ export class StratagemsHttpClient {
             return new Error('Connection refused - check if the server is running');
         }
 
-        return new Error(`Network error: ${error.message || 'Unknown error'}`);
+        if (error.message && error.message.includes('Invalid URL')) {
+            console.log('🔍 [Stratagems HTTP] Invalid URL error. URL details:', {
+                error: error.message,
+                url: error.config?.url || 'Unknown URL'
+            });
+            return new Error(`Invalid URL: ${error.config?.url || 'Unknown URL'} `);
+        }
+
+        const errorMessage = `Network error: ${error.message || 'Unknown error'} `;
+        console.log('🔍 [Stratagems HTTP] Formatted network error:', errorMessage);
+        return new Error(errorMessage);
     }
 
     // Helper methods for common operations
     async get<T = any>(endpoint: string): Promise<ApiResponse<T>> {
+        console.log(`🔍 [Stratagems HTTP] GET request to: ${endpoint}`);
         return this.request<T>('GET', endpoint);
     }
 
     async post<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+        console.log(`🔍 [Stratagems HTTP] POST request to: ${endpoint}`);
         return this.request<T>('POST', endpoint, data);
     }
 
     async put<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+        console.log(`🔍 [Stratagems HTTP] PUT request to: ${endpoint}`);
         return this.request<T>('PUT', endpoint, data);
     }
 
@@ -106,8 +147,17 @@ export class StratagemsHttpClient {
 
 // Utility functions for building endpoints
 export function buildSetEndpoint(setName: string, operation?: string): string {
+    console.log(`🔍 [Stratagems Endpoint] Building set endpoint for: "${setName}", operation: "${operation || 'none'}"`);
+
+    if (!setName) {
+        throw new Error('Set name is required to build endpoint');
+    }
+
     const base = `/api/v1/sets/${encodeURIComponent(setName)}`;
-    return operation ? `${base}/${operation}` : base;
+    const endpoint = operation ? `${base}/${operation}` : base;
+
+    console.log(`🔍 [Stratagems Endpoint] Built endpoint: "${endpoint}"`);
+    return endpoint;
 }
 
 export function buildLookupEndpoint(lookupName: string, operation?: string): string {
@@ -143,6 +193,8 @@ export function buildMetadata(
 
 // Utility functions for validation
 export function validateSetName(name: string): void {
+    console.log(`🔍 [Stratagems Validation] Validating set name: "${name}"`);
+
     if (!name || typeof name !== 'string') {
         throw new Error('Set name is required and must be a string');
     }
@@ -154,6 +206,8 @@ export function validateSetName(name: string): void {
     if (name.length > 100) {
         throw new Error('Set name cannot exceed 100 characters');
     }
+
+    console.log(`🔍 [Stratagems Validation] Set name validation passed`);
 }
 
 export function validateLookupName(name: string): void {
@@ -171,6 +225,8 @@ export function validateLookupName(name: string): void {
 }
 
 export function validateValue(value: string): void {
+    console.log(`🔍 [Stratagems Validation] Validating value: "${value}"`);
+
     if (!value || typeof value !== 'string') {
         throw new Error('Value is required and must be a string');
     }
@@ -178,4 +234,6 @@ export function validateValue(value: string): void {
     if (value.length > 255) {
         throw new Error('Value cannot exceed 255 characters');
     }
+
+    console.log(`🔍 [Stratagems Validation] Value validation passed`);
 } 

@@ -8,7 +8,7 @@ import {
 export class StratagemsApi implements ICredentialType {
     name = 'stratagemsApi';
     displayName = 'Stratagems API';
-    documentationUrl = 'https://github.com/your-org/st-open-source';
+    documentationUrl = 'https://github.com/stratagems-com/stratagems-tools-open-source';
     properties: INodeProperties[] = [
         {
             displayName: 'Host URL',
@@ -37,7 +37,7 @@ export class StratagemsApi implements ICredentialType {
         type: 'generic',
         properties: {
             headers: {
-                'X-API-Key': '={{$credentials.apiKey}}',
+                'X-Api-Key': '={{$credentials.apiKey}}',
                 'Content-Type': 'application/json',
             },
         },
