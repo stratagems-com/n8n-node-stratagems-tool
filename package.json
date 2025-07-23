@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-stratagems-tool",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "description": "n8n nodes for Stratagems Automation Tools - set tracking, lookup mapping, and app management",
   "keywords": [
     "n8n",

@@ -33,16 +33,21 @@ export async function executeCheckSetValues(
     const setName = this.getNodeParameter('setName', itemIndex) as string;
     const mode = "single" //this.getNodeParameter('mode', itemIndex) as string;
     const valueField = this.getNodeParameter('valueField', itemIndex) as string;
-    const outputField = this.getNodeParameter('outputField', itemIndex) as string;
     const filterMode = this.getNodeParameter('filterMode', itemIndex) as string;
 
+    // Get advanced settings
+    const getSetValueData = this.getNodeParameter('getSetValueData', itemIndex) as (boolean | undefined) || false;
+    const setValueDataFieldName = getSetValueData
+        ? (this.getNodeParameter('setValueDataFieldName', itemIndex) as (string | undefined) || '__checkData')
+        : '__checkData'; // Default value when getSetValueData is false
     console.log('🔍 [Stratagems] Parameters:', {
         setName,
         mode,
         valueField,
-        outputField,
         filterMode,
-        autoCreate
+        autoCreate,
+        getSetValueData,
+        setValueDataFieldName
     });
 
     // Validate inputs
@@ -80,13 +85,13 @@ export async function executeCheckSetValues(
         result = await executeSingleCheck.call(this, itemIndex, {
             setName,
             value,
-            outputField,
             filterMode,
             client,
             baseUrl: formattedBaseUrl,
             autoCreate,
+            getSetValueData,
+            setValueDataFieldName,
         }, inputData);
-
 
         return result || [];
     } catch (error: any) {
@@ -101,15 +106,25 @@ async function executeSingleCheck(
     params: {
         setName: string;
         value: any;
-        outputField: string;
         filterMode: string;
         client: StratagemsHttpClient;
         baseUrl: string;
         autoCreate: boolean;
+        getSetValueData?: boolean;
+        setValueDataFieldName?: string;
     },
     inputData: any
 ): Promise<any> {
-    const { setName, value, outputField, filterMode, client, baseUrl, autoCreate } = params;
+    const {
+        setName,
+        value,
+        filterMode,
+        client,
+        baseUrl,
+        autoCreate,
+        getSetValueData,
+        setValueDataFieldName
+    } = params;
 
     // Validate the value
     //TODO: Add support for other value types
@@ -153,8 +168,7 @@ async function executeSingleCheck(
 
         console.log('🔍 [Stratagems] API Response:', { result });
 
-
-
+        // Apply filter mode logic
         if (filterMode === 'existing' && !exists) {
             console.log('🔍 [Stratagems] Filtering out non-existing value (existing mode)');
             return undefined;
@@ -164,10 +178,14 @@ async function executeSingleCheck(
             return undefined;
         }
 
-        const output = {
-            [outputField || "__checkData"]: result.value,
-            ...inputData,
-        };
+        // Build output based on advanced settings
+        let output = { ...inputData };
+
+        // Only add set value data if the advanced setting is enabled
+        if (getSetValueData) {
+            const fieldName = setValueDataFieldName || '__checkData';
+            output[fieldName] = result.value;
+        }
 
         console.log('🔍 [Stratagems] Single check result:', output);
         return output;
@@ -192,10 +210,14 @@ async function executeSingleCheck(
                     return undefined; // Skip this item
                 }
 
-                const output = {
-                    [outputField || "__checkData"]: null,
-                    ...inputData,
-                };
+                // Build output for auto-create scenario
+                let output = { ...inputData };
+
+                // Only add set value data if the advanced setting is enabled
+                if (getSetValueData) {
+                    const fieldName = setValueDataFieldName || '__checkData';
+                    output[fieldName] = null;
+                }
 
                 console.log('🔍 [Stratagems] Auto-create single check result:', output);
                 return output;

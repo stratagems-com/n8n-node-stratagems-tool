@@ -54,15 +54,13 @@ The node requires authentication using the **StratagemsApi** credentials:
 
 **Parameters:**
 - **Set Name** (required): Unique name of the set to check
-- **Mode**: 
-  - `single` - Check one value per item
-  - `bulk` - Check multiple values per item
 - **Value Field**: Field name containing the value to check (default: `value`)
-- **Output Field**: Field name for the result (default: `exists`)
 - **Filter Mode**:
   - `all` - Return all items with existence status
   - `existing` - Return only items that exist in set
   - `nonExisting` - Return only items that don't exist in set
+- **Get Set Value Data**: Include set value data in the output
+- **Set Value Data Field Name**: Field name to store the set value data
 - **Auto Create Set/Lookup**: 
   - `true` - Automatically create set if it doesn't exist
   - `false` - Throw error if set doesn't exist (default)
@@ -75,13 +73,22 @@ The node requires authentication using the **StratagemsApi** credentials:
 }
 ```
 
-**Output Example** (all mode):
+**Output Example**:
 ```json
 {
-  "orderId": "ORD-12345",
-  "customerEmail": "john@example.com",
+  "success": true,
   "exists": true,
-  "checkedValue": "ORD-12345"
+  "value": "ORD-12345",
+  "setValue": {
+    "id": "set-value-123",
+    "setId": "set-abc",
+    "value": "ORD-12345",
+    "metadata": {
+      "processedAt": "2024-01-01T10:00:00Z"
+    },
+    "createdAt": "2024-01-01T10:00:00Z",
+    "updatedAt": "2024-01-01T10:00:00Z"
+  }
 }
 ```
 
@@ -90,10 +97,8 @@ The node requires authentication using the **StratagemsApi** credentials:
 
 **Parameters:**
 - **Set Name** (required): Unique name of the set
-- **Mode**:
-  - `single` - Add one value per item
-  - `bulk` - Add multiple values per item
 - **Value Field**: Field name containing the value to add (default: `value`)
+- **Metadata Fields**: Comma-separated list of fields to include as metadata
 - **Auto Create Set/Lookup**:
   - `true` - Automatically create set if it doesn't exist
   - `false` - Throw error if set doesn't exist (default)
@@ -110,11 +115,18 @@ The node requires authentication using the **StratagemsApi** credentials:
 **Output Example:**
 ```json
 {
-  "orderId": "ORD-12345",
-  "processedAt": "2024-01-01T10:00:00Z",
-  "status": "completed",
-  "addedToSet": true,
-  "setValue": "ORD-12345"
+  "success": true,
+  "data": {
+    "id": "set-value-123",
+    "setId": "set-abc",
+    "value": "ORD-12345",
+    "metadata": {
+      "processedAt": "2024-01-01T10:00:00Z",
+      "status": "completed"
+    },
+    "createdAt": "2024-01-01T10:00:00Z",
+    "updatedAt": "2024-01-01T10:00:00Z"
+  }
 }
 ```
 
@@ -125,11 +137,10 @@ The node requires authentication using the **StratagemsApi** credentials:
 
 **Parameters:**
 - **Lookup Name** (required): Unique name of the lookup
-- **Mode**:
-  - `single` - Add one mapping per item
-  - `bulk` - Add multiple mappings per item
 - **Left Field**: Field name containing the left system ID (default: `left`)
 - **Right Field**: Field name containing the right system ID (default: `right`)
+- **Left Metadata Fields**: Comma-separated list of fields to include as left metadata
+- **Right Metadata Fields**: Comma-separated list of fields to include as right metadata
 - **Auto Create Set/Lookup**:
   - `true` - Automatically create lookup if it doesn't exist
   - `false` - Throw error if lookup doesn't exist (default)
@@ -147,13 +158,21 @@ The node requires authentication using the **StratagemsApi** credentials:
 **Output Example:**
 ```json
 {
-  "shopifyCustomerId": "12345",
-  "erpCustomerId": "ERP-67890",
-  "customerName": "John Doe",
-  "customerEmail": "john@example.com",
-  "mappingAdded": true,
-  "leftValue": "12345",
-  "rightValue": "ERP-67890"
+  "success": true,
+  "data": {
+    "id": "lookup-value-123",
+    "lookupId": "lookup-abc",
+    "left": "12345",
+    "right": "ERP-67890",
+    "leftMetadata": {
+      "customerName": "John Doe"
+    },
+    "rightMetadata": {
+      "customerEmail": "john@example.com"
+    },
+    "createdAt": "2024-01-01T10:00:00Z",
+    "updatedAt": "2024-01-01T10:00:00Z"
+  }
 }
 ```
 
@@ -166,32 +185,28 @@ The node requires authentication using the **StratagemsApi** credentials:
   - `left` - Search by left system ID
   - `right` - Search by right system ID
   - `both` - Search by both (returns all mappings)
-- **Search Field**: Field name containing the search value (default: `searchValue`)
-- **Limit**: Maximum number of results (default: 50, max: 100)
+- **Search Value**: The actual value to search for
 - **Auto Create Set/Lookup**:
   - `true` - Automatically create lookup if it doesn't exist
   - `false` - Throw error if lookup doesn't exist (default)
 
-**Input Example:**
+**Input/Output Example:**
 ```json
 {
-  "searchValue": "12345"
-}
-```
-
-**Output Example:**
-```json
-{
-  "searchValue": "12345",
+  "success": true,
   "results": [
     {
+      "id": "lookup-value-123",
+      "lookupId": "lookup-abc",
       "left": "12345",
       "right": "ERP-67890",
       "leftMetadata": { "name": "John Doe" },
-      "rightMetadata": { "email": "john@example.com" }
+      "rightMetadata": { "email": "john@example.com" },
+      "createdAt": "2024-01-01T10:00:00Z",
+      "updatedAt": "2024-01-01T10:00:00Z"
     }
   ],
-  "totalFound": 1
+  "total": 1
 }
 ```
 
@@ -201,11 +216,10 @@ The node requires authentication using the **StratagemsApi** credentials:
 **Parameters:**
 - **Lookup Name** (required): Unique name of the lookup
 - **Set Name** (required): Unique name of the set for tracking
-- **Mode**:
-  - `single` - Process one mapping per item
-  - `bulk` - Process multiple mappings per item
 - **Left Field**: Field name containing the left system ID (default: `left`)
 - **Right Field**: Field name containing the right system ID (default: `right`)
+- **Left Metadata Fields**: Comma-separated list of fields to include as left metadata
+- **Right Metadata Fields**: Comma-separated list of fields to include as right metadata
 - **Set Value Field**: Which field to use for set tracking (`left`, `right`, or custom field)
 - **Custom Set Value Field**: Custom field name for set tracking (when Set Value Field is 'custom')
 - **Auto Create Set/Lookup**: Auto-create lookup and set if missing
@@ -222,12 +236,25 @@ The node requires authentication using the **StratagemsApi** credentials:
 **Output Example:**
 ```json
 {
-  "shopifyOrderId": "ORD-12345",
-  "erpOrderId": "ERP-67890",
-  "orderAmount": 99.99,
-  "mappingAdded": true,
-  "setTrackingAdded": true,
-  "trackedValue": "ORD-12345"
+  "success": true,
+  "lookupResult": {
+    "id": "lookup-value-123",
+    "lookupId": "lookup-abc",
+    "left": "ORD-12345",
+    "right": "ERP-67890",
+    "leftMetadata": null,
+    "rightMetadata": null,
+    "createdAt": "2024-01-01T10:00:00Z",
+    "updatedAt": "2024-01-01T10:00:00Z"
+  },
+  "setResult": {
+    "id": "set-value-123",
+    "setId": "set-abc",
+    "value": "ORD-12345",
+    "metadata": null,
+    "createdAt": "2024-01-01T10:00:00Z",
+    "updatedAt": "2024-01-01T10:00:00Z"
+  }
 }
 ```
 
@@ -241,13 +268,12 @@ The node requires authentication using the **StratagemsApi** credentials:
 **Output Example:**
 ```json
 {
-  "appInfo": {
-    "id": "app-123",
-    "name": "My Integration App",
-    "description": "App for syncing data",
-    "isActive": true,
-    "createdAt": "2024-01-01T00:00:00Z"
-  }
+  "id": "app-123",
+  "name": "My Integration App",
+  "description": "App for syncing data",
+  "isActive": true,
+  "createdAt": "2024-01-01T00:00:00Z",
+  "updatedAt": "2024-01-01T00:00:00Z"
 }
 ```
 
@@ -259,11 +285,10 @@ The node requires authentication using the **StratagemsApi** credentials:
 **Output Example:**
 ```json
 {
-  "health": {
-    "status": "healthy",
-    "timestamp": "2024-01-01T10:00:00Z",
-    "version": "1.0.0"
-  }
+  "appId": "app-123",
+  "appName": "My Integration App",
+  "status": "healthy",
+  "timestamp": "2024-01-01T10:00:00Z"
 }
 ```
 
@@ -275,8 +300,7 @@ The node requires authentication using the **StratagemsApi** credentials:
 The **Auto Create Set/Lookup** option allows the node to automatically create sets or lookups if they don't exist, eliminating the need for manual setup. This feature is available for all operations that work with sets or lookups.
 
 ### **Mode Options**
-- **Single Mode**: Process one value/mapping per input item
-- **Bulk Mode**: Process multiple values/mappings per input item (useful for batch operations)
+Note: Currently, all operations use single mode by default.
 
 ### **Field Mapping**
 All operations support flexible field mapping, allowing you to specify which fields from your input data should be used for the operation. This makes the node highly adaptable to different data structures.
@@ -334,7 +358,7 @@ graph LR
 - **Operation**: `searchLookup`
 - **Lookup Name**: `bc-shopify-customer-mapping`
 - **Search Type**: `left` (search by BC customer number)
-- **Search Field**: `{{$json.customerNumber}}` (BC customer number)
+- **Search Value**: `BC-12345` (BC customer number)
 - **Auto Create Set/Lookup**: `true`
 
 ### **Example 3: Full Customer Sync with Set Tracking**
@@ -463,7 +487,7 @@ The node is built with a modular architecture:
 ## 📝 **Technical Specifications**
 
 ### **API Endpoints Used**
-- `GET /api/v1/sets/:set/contains` - Check set values
+- `POST /api/v1/sets/:set/contains` - Check single set value
 - `POST /api/v1/sets/:set/values` - Add to set
 - `POST /api/v1/sets/:set/values/bulk` - Bulk add to set
 - `POST /api/v1/sets/:set/contains/bulk` - Bulk check set values

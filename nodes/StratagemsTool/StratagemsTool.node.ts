@@ -157,16 +157,43 @@ export class StratagemsTool implements INodeType {
                     },
                 },
             },
-            // Output Field (for check set values)
+            // Metadata Fields (for addToSet)
             {
-                displayName: 'Output Field',
-                name: 'outputField',
+                displayName: 'Metadata Fields',
+                name: 'metadataFields',
                 type: 'string',
                 default: '',
-                description: 'Field name for the result',
+                placeholder: 'field1,field2,field3',
+                description: 'Comma-separated list of input fields to include as metadata',
                 displayOptions: {
                     show: {
-                        operation: ['checkSetValues'],
+                        operation: ['addToSet'],
+                    },
+                },
+            },
+            {
+                displayName: 'Left Metadata Fields',
+                name: 'leftMetadataFields',
+                type: 'string',
+                default: '',
+                placeholder: 'field1,field2,field3',
+                description: 'Comma-separated list of input fields to include as metadata',
+                displayOptions: {
+                    show: {
+                        operation: ['addToLookup', 'fullLookup'],
+                    },
+                },
+            },
+            {
+                displayName: 'Right Metadata Fields',
+                name: 'rightMetadataFields',
+                type: 'string',
+                default: '',
+                placeholder: 'field1,field2,field3',
+                description: 'Comma-separated list of input fields to include as metadata',
+                displayOptions: {
+                    show: {
+                        operation: ['addToLookup', 'fullLookup'],
                     },
                 },
             },
@@ -297,37 +324,36 @@ export class StratagemsTool implements INodeType {
                     },
                 },
             },
-            // Search Field (for search lookup)
+            // Search Value (for search lookup)
             {
-                displayName: 'Search Field',
-                name: 'searchField',
+                displayName: 'Search Value',
+                name: 'searchValue',
                 type: 'string',
-                default: 'searchValue',
-                description: 'Field name containing the search value',
+                default: '',
+                placeholder: 'Value to search for',
+                description: 'The value to search for in the lookup',
                 displayOptions: {
                     show: {
                         operation: ['searchLookup'],
+
                     },
+
                 },
             },
-            // Limit (for search lookup)
+
+            // ======== ADVANCED SETTINGS GROUP ========
             {
-                displayName: 'Limit',
-                name: 'limit',
-                type: 'number',
-                default: 50,
-                description: 'Maximum number of results (max: 100)',
-                typeOptions: {
-                    minValue: 1,
-                    maxValue: 100,
-                },
+                displayName: 'Advanced Settings',
+                name: 'advancedSettingsGroup',
+                type: 'notice',
+                default: '',
                 displayOptions: {
                     show: {
-                        operation: ['searchLookup'],
+                        operation: ['checkSetValues', 'addToSet', 'addToLookup', 'searchLookup', 'fullLookup'],
                     },
                 },
             },
-            // Advanced Settings
+            // Auto Create Set/Lookup
             {
                 displayName: 'Auto Create Set/Lookup',
                 name: 'autoCreate',
@@ -340,6 +366,34 @@ export class StratagemsTool implements INodeType {
                     },
                 },
             },
+            // Get Set Value Data (new switch)
+            {
+                displayName: 'Get Set Value Data',
+                name: 'getSetValueData',
+                type: 'boolean',
+                default: false,
+                description: 'Include set value data in the output alongside input data',
+                displayOptions: {
+                    show: {
+                        operation: ['checkSetValues'],
+                    },
+                },
+            },
+            // Set Value Data Field Name (conditional field)
+            {
+                displayName: 'Set Value Data Field Name',
+                name: 'setValueDataFieldName',
+                type: 'string',
+                default: '__checkData',
+                placeholder: '__checkData',
+                description: 'Field name to store the set value data in the output',
+                displayOptions: {
+                    show: {
+                        operation: ['checkSetValues'],
+                        getSetValueData: [true],
+                    },
+                },
+            },
         ],
     };
 
@@ -347,9 +401,10 @@ export class StratagemsTool implements INodeType {
         const items = this.getInputData();
         const returnData: INodeExecutionData[] = [];
 
+
         for (let i = 0; i < items.length; i++) {
             const operation = this.getNodeParameter('operation', i) as string;
-            const autoCreate = this.getNodeParameter('autoCreate', i) as boolean;
+            const autoCreate = this.getNodeParameter('autoCreate', i, false) as boolean;
 
             try {
                 let result: any;
@@ -406,4 +461,4 @@ export class StratagemsTool implements INodeType {
         // Return empty array if no items passed the filter
         return [returnData];
     }
-} 
+}

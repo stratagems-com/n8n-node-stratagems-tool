@@ -9,6 +9,7 @@ export class StratagemsApi implements ICredentialType {
     name = 'stratagemsApi';
     displayName = 'Stratagems API';
     documentationUrl = 'https://github.com/stratagems-com/stratagems-tools-open-source';
+    iconUrl = 'file:../stratagemsTool.svg';
     properties: INodeProperties[] = [
         {
             displayName: 'Host URL',
@@ -50,4 +51,4 @@ export class StratagemsApi implements ICredentialType {
             method: 'GET',
         },
     };
-} 
+}
