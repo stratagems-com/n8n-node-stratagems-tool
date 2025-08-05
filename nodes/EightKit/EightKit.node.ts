@@ -10,7 +10,7 @@ import {
 
 
 
-import { executeAddToLookup, executeAddToSet, executeCheckSetValues, executeCreateLookup, executeCreateSet, executeGetLookupValues, executeGetSetInfo, executeGetSetValues, executeListLookups, executeListSets, executeRemoveFromLookup, executeRemoveFromSet } from './operations';
+import { executeAcquireLock, executeAddToLookup, executeAddToSet, executeCheckLock, executeCheckSetValues, executeCreateLastUpdated, executeCreateLookup, executeCreateSet, executeGetAppHealth, executeGetAppInfo, executeGetLastUpdated, executeGetLookupValues, executeGetSetInfo, executeGetSetValues, executeListLookups, executeListSets, executeReleaseLock, executeRemoveFromLookup, executeRemoveFromSet } from './operations';
 import { EightKitHttpClient } from './utils/httpClient';
 
 export class EightKit implements INodeType {
@@ -40,6 +40,21 @@ export class EightKit implements INodeType {
                 noDataExpression: true,
                 options: [
                     {
+                        name: 'App',
+                        value: 'app',
+                        description: 'Manage app information and health status',
+                    },
+                    {
+                        name: 'Lock',
+                        value: 'lock',
+                        description: 'Manage distributed locks for resource coordination',
+                    },
+                    {
+                        name: 'Last Updated',
+                        value: 'lastUpdated',
+                        description: 'Track when operations or data sources were last updated',
+                    },
+                    {
                         name: 'Set',
                         value: 'set',
                         description: 'Manage sets themselves (create, list, get info)',
@@ -61,6 +76,93 @@ export class EightKit implements INodeType {
                     },
                 ],
                 default: 'set',
+            },
+            // App Operations (manage app information and health)
+            {
+                displayName: 'Operation',
+                name: 'operation',
+                type: 'options',
+                noDataExpression: true,
+                displayOptions: {
+                    show: {
+                        resource: ['app'],
+                    },
+                },
+                options: [
+                    {
+                        name: 'Get App Info',
+                        value: 'getAppInfo',
+                        description: 'Retrieve information about the authenticated app',
+                        action: 'Get app information',
+                    },
+                    {
+                        name: 'Health Check',
+                        value: 'getAppHealth',
+                        description: 'Check the health status of the authenticated app',
+                        action: 'Check app health',
+                    },
+                ],
+                default: 'getAppInfo',
+            },
+            // Lock Operations (manage distributed locks)
+            {
+                displayName: 'Operation',
+                name: 'operation',
+                type: 'options',
+                noDataExpression: true,
+                displayOptions: {
+                    show: {
+                        resource: ['lock'],
+                    },
+                },
+                options: [
+                    {
+                        name: 'Check Lock',
+                        value: 'checkLock',
+                        description: 'Check if a specific lock exists and get its details',
+                        action: 'Check if a lock exists',
+                    },
+                    {
+                        name: 'Acquire Lock',
+                        value: 'acquireLock',
+                        description: 'Attempt to acquire a lock for resource coordination',
+                        action: 'Acquire a lock',
+                    },
+                    {
+                        name: 'Release Lock',
+                        value: 'releaseLock',
+                        description: 'Release a specific lock by key',
+                        action: 'Release a lock',
+                    },
+                ],
+                default: 'checkLock',
+            },
+            // Last Updated Operations (track last updated timestamps)
+            {
+                displayName: 'Operation',
+                name: 'operation',
+                type: 'options',
+                noDataExpression: true,
+                displayOptions: {
+                    show: {
+                        resource: ['lastUpdated'],
+                    },
+                },
+                options: [
+                    {
+                        name: 'Get Last Updated',
+                        value: 'getLastUpdated',
+                        description: 'Retrieve a last updated record by key',
+                        action: 'Get last updated record',
+                    },
+                    {
+                        name: 'Add New Last Updated',
+                        value: 'createLastUpdated',
+                        description: 'Create a new last updated record with current timestamp',
+                        action: 'Create last updated record',
+                    },
+                ],
+                default: 'getLastUpdated',
             },
             // Set Operations (manage sets themselves)
             {
@@ -194,6 +296,21 @@ export class EightKit implements INodeType {
                 ],
                 default: 'addToLookup',
             },
+            // Key (for lock and last updated operations)
+            {
+                displayName: 'Key',
+                name: 'key',
+                type: 'string',
+                default: '',
+                placeholder: 'my_key',
+                description: 'Unique identifier for the lock or last updated record. Must contain only letters, numbers, hyphens, and underscores. Maximum 255 characters.',
+                required: true,
+                displayOptions: {
+                    show: {
+                        resource: ['lock', 'lastUpdated'],
+                    },
+                },
+            },
             // Name (for set and lookup operations)
             {
                 displayName: 'Name',
@@ -218,12 +335,27 @@ export class EightKit implements INodeType {
                 name: 'description',
                 type: 'string',
                 default: '',
-                placeholder: 'Optional description of this set or lookup',
-                description: 'Optional human-readable description explaining the purpose of this set or lookup. Helpful for documentation and team collaboration.',
+                placeholder: 'Optional description',
+                description: 'Optional human-readable description explaining the purpose of this record. Helpful for documentation and team collaboration.',
                 displayOptions: {
                     show: {
-                        resource: ['set', 'lookup'],
-                        operation: ['createSet', 'createLookup'],
+                        resource: ['set', 'lookup', 'lastUpdated'],
+                        operation: ['createSet', 'createLookup', 'createLastUpdated'],
+                    },
+                },
+            },
+            // Date (for create last updated operation)
+            {
+                displayName: 'Date',
+                name: 'date',
+                type: 'string',
+                default: '',
+                placeholder: '2024-01-15T10:30:00.000Z',
+                description: 'Optional custom date in ISO 8601 format. If not specified, current timestamp will be used.',
+                displayOptions: {
+                    show: {
+                        resource: ['lastUpdated'],
+                        operation: ['createLastUpdated'],
                     },
                 },
             },
@@ -256,6 +388,25 @@ export class EightKit implements INodeType {
                     show: {
                         resource: ['lookupValues'],
                         operation: ['addToLookup'],
+                    },
+                },
+            },
+            // Timeout (for acquire lock operation)
+            {
+                displayName: 'Timeout (Seconds)',
+                name: 'timeout',
+                type: 'number',
+                typeOptions: {
+                    minValue: 1,
+                    maxValue: 3600,
+                },
+                default: null,
+                placeholder: '300',
+                description: 'Optional timeout in seconds. If not specified, the lock will not expire automatically.',
+                displayOptions: {
+                    show: {
+                        resource: ['lock'],
+                        operation: ['acquireLock'],
                     },
                 },
             },
@@ -668,6 +819,27 @@ export class EightKit implements INodeType {
                 let result: any;
 
                 switch (operation) {
+                    case 'getAppInfo':
+                        result = await executeGetAppInfo.call(this, i);
+                        break;
+                    case 'getAppHealth':
+                        result = await executeGetAppHealth.call(this, i);
+                        break;
+                    case 'checkLock':
+                        result = await executeCheckLock.call(this, i);
+                        break;
+                    case 'acquireLock':
+                        result = await executeAcquireLock.call(this, i);
+                        break;
+                    case 'releaseLock':
+                        result = await executeReleaseLock.call(this, i);
+                        break;
+                    case 'getLastUpdated':
+                        result = await executeGetLastUpdated.call(this, i);
+                        break;
+                    case 'createLastUpdated':
+                        result = await executeCreateLastUpdated.call(this, i);
+                        break;
                     case 'createSet':
                         result = await executeCreateSet.call(this, i);
                         break;

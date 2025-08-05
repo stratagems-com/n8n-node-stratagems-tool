@@ -1,5 +1,5 @@
 // Export nodes
-export * from './nodes/StratagemsTool';
+export * from './nodes/EightKit/EightKit.node';
 
 // Export credentials
-export * from './credentials/StratagemsApi.credentials';
+export * from './credentials/EightKitApi.credentials';
