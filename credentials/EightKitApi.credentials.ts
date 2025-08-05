@@ -9,7 +9,7 @@ export class EightKitApi implements ICredentialType {
     name = 'eightKitApi';
     displayName = '8kit API';
     documentationUrl = 'https://github.com/stratagems-com/stratagems-tools-open-source';
-    iconUrl = 'file:../8kit.svg';
+    iconUrl = 'file:8kit.svg';
     properties: INodeProperties[] = [
         {
             displayName: 'Host URL',
