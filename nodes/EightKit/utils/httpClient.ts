@@ -14,7 +14,7 @@ export interface HttpClientOptions {
     retryDelay?: number;
 }
 
-export class StratagemsHttpClient {
+export class EightKitHttpClient {
     constructor(
         private executeFunctions: IExecuteFunctions,
         private itemIndex: number,
@@ -38,7 +38,7 @@ export class StratagemsHttpClient {
                 }
 
                 // Get credentials for API key
-                const credentials = await this.executeFunctions.getCredentials('stratagemsApi');
+                const credentials = await this.executeFunctions.getCredentials('eightKitApi');
                 const apiKey = credentials.apiKey as string;
 
                 if (!apiKey) {

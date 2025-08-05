@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { executeCheckSetValues } from '../nodes/StratagemsTool/operations/checkSetValues';
-import { StratagemsHttpClient } from '../nodes/StratagemsTool/utils/httpClient';
+import { executeCheckSetValues } from '../nodes/8kit/operations/checkSetValues';
+import { EightKitHttpClient } from '../nodes/8kit/utils/httpClient';
 
 // Mock the HTTP client
 vi.mock('../nodes/StratagemsTool/utils/httpClient', () => ({
-    StratagemsHttpClient: vi.fn(),
+    EightKitHttpClient: vi.fn(),
     buildSetEndpoint: vi.fn((setName: string, operation?: string) => {
         const base = `/api/v1/sets/${encodeURIComponent(setName)}`;
         return operation ? `${base}/${operation}` : base;
@@ -54,8 +54,8 @@ describe('checkSetValues Operation', () => {
             getCredentials: vi.fn(() => Promise.resolve({ host: 'http://localhost:3000' })),
         };
 
-        // Mock StratagemsHttpClient constructor
-        (StratagemsHttpClient as any).mockImplementation(() => mockHttpClient);
+        // Mock EightKitHttpClient constructor
+        (EightKitHttpClient as any).mockImplementation(() => mockHttpClient);
     });
 
     describe('Single Mode', () => {

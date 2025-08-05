@@ -5,11 +5,11 @@ import {
     INodeProperties,
 } from 'n8n-workflow';
 
-export class StratagemsApi implements ICredentialType {
-    name = 'stratagemsApi';
-    displayName = 'Stratagems API';
+export class EightKitApi implements ICredentialType {
+    name = 'eightKitApi';
+    displayName = '8kit API';
     documentationUrl = 'https://github.com/stratagems-com/stratagems-tools-open-source';
-    iconUrl = 'file:../stratagemsTool.svg';
+    iconUrl = 'file:../8kit.svg';
     properties: INodeProperties[] = [
         {
             displayName: 'Host URL',
@@ -17,7 +17,7 @@ export class StratagemsApi implements ICredentialType {
             type: 'string',
             default: 'https://api.yourdomain.com',
             placeholder: 'https://api.yourdomain.com',
-            description: 'Base URL of your Stratagems API instance',
+            description: 'Base URL of your 8kit API instance',
             required: true,
         },
         {

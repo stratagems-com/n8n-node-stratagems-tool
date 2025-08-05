@@ -1,4 +1,4 @@
-import { StratagemsHttpClient, buildLookupEndpoint, buildSetEndpoint } from "./httpClient";
+import { EightKitHttpClient, buildLookupEndpoint, buildSetEndpoint } from "./httpClient";
 
 interface CreateLookupResult {
     id: string;
@@ -35,13 +35,13 @@ interface CreateSetResult {
 }
 
 async function createSet(
-    client: StratagemsHttpClient,
+    client: EightKitHttpClient,
     baseUrl: string,
     setName: string
 ): Promise<CreateSetResult> {
     const url = `${baseUrl}/api/v1/sets`;
 
-    console.log('➕ [Stratagems] Creating set:', url);
+    console.log('➕ [8kit] Creating set:', url);
 
     //ToDo: add more info about the app that created the set
     const payload = {
@@ -49,7 +49,7 @@ async function createSet(
         description: `Auto-created set for ${setName} by n8n node`,
     };
 
-    console.log('➕ [Stratagems] Create set payload:', payload);
+    console.log('➕ [8kit] Create set payload:', payload);
 
     const response = await client.post<CreateSetResult>(url, payload);
 
@@ -65,7 +65,7 @@ async function createSet(
 }
 
 async function checkSetExists(
-    client: StratagemsHttpClient,
+    client: EightKitHttpClient,
     baseUrl: string,
     setName: string
 ): Promise<boolean> {
@@ -73,12 +73,12 @@ async function checkSetExists(
         const endpoint = buildSetEndpoint(setName, '');
         const url = `${baseUrl}${endpoint}`;
 
-        console.log('➕ [Stratagems] Checking if set exists:', url);
+        console.log('➕ [8kit] Checking if set exists:', url);
 
         const response = await client.get(url);
         return response.success && response.data;
     } catch (error: any) {
-        console.log('➕ [Stratagems] Set check error:', error.message);
+        console.log('➕ [8kit] Set check error:', error.message);
 
         // If 404 or SET_NOT_FOUND, the set doesn't exist
         if (error.message.includes('404') || error.message.includes('SET_NOT_FOUND')) {
@@ -92,7 +92,7 @@ async function checkSetExists(
 
 
 async function checkLookupExists(
-    client: StratagemsHttpClient,
+    client: EightKitHttpClient,
     baseUrl: string,
     lookupName: string
 ): Promise<boolean> {
@@ -100,12 +100,12 @@ async function checkLookupExists(
         const endpoint = buildLookupEndpoint(lookupName, '');
         const url = `${baseUrl}${endpoint}`;
 
-        console.log('🔗 [Stratagems] Checking if lookup exists:', url);
+        console.log('🔗 [8kit] Checking if lookup exists:', url);
 
         const response = await client.get(url);
         return response.success && response.data;
     } catch (error: any) {
-        console.log('🔗 [Stratagems] Lookup check error:', error.message);
+        console.log('🔗 [8kit] Lookup check error:', error.message);
 
         // If 404 or LOOKUP_NOT_FOUND, the lookup doesn't exist
         if (error.message.includes('404') || error.message.includes('LOOKUP_NOT_FOUND')) {
@@ -118,20 +118,20 @@ async function checkLookupExists(
 }
 
 async function createLookup(
-    client: StratagemsHttpClient,
+    client: EightKitHttpClient,
     baseUrl: string,
     lookupName: string
 ): Promise<CreateLookupResult> {
     const url = `${baseUrl}/api/v1/lookups`;
 
-    console.log('🔗 [Stratagems] Creating lookup:', url);
+    console.log('🔗 [8kit] Creating lookup:', url);
 
     const payload = {
         name: lookupName,
         description: `Auto-created lookup for ${lookupName} by n8n node`,
     };
 
-    console.log('🔗 [Stratagems] Create lookup payload:', payload);
+    console.log('🔗 [8kit] Create lookup payload:', payload);
 
     const response = await client.post<CreateLookupResult>(url, payload);
 

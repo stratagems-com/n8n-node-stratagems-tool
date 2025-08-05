@@ -1,10 +1,10 @@
-# Stratagems n8n Nodes
+# 8kit n8n Nodes
 
-A comprehensive n8n community node that integrates with the **Stratagems Automation Tools** API. This node provides easy access to set tracking, lookup mapping, and app management functionality directly within n8n workflows.
+A comprehensive n8n community node that integrates with the **8kit Automation Tools** API. This node provides easy access to set tracking, lookup mapping, and app management functionality directly within n8n workflows.
 
 ## 🎯 **Overview**
 
-The Stratagems Tool node enables you to build **reliable**, **idempotent**, and **traceable** automations by providing:
+The 8kit node enables you to build **reliable**, **idempotent**, and **traceable** automations by providing:
 
 - **🔍 Set Tracking** - Prevent duplicate processing of items
 - **🔗 Lookup Mapping** - Map IDs between different systems (ERP, CRM, Shopify, etc.)
@@ -17,7 +17,7 @@ Perfect for workflows involving data synchronization, order processing, customer
 
 ## 📦 **Available Operations**
 
-The **Stratagems Tool** node provides the following operations:
+The **8kit** node provides the following operations:
 
 ### **Set Operations**
 - `checkSetValues` - Check if values exist in a set
@@ -36,10 +36,10 @@ The **Stratagems Tool** node provides the following operations:
 
 ## 🔐 **Authentication & Credentials**
 
-### **StratagemsApi Credentials**
-The node requires authentication using the **StratagemsApi** credentials:
+### **8kitApi Credentials**
+The node requires authentication using the **8kitApi** credentials:
 
-- **Host URL**: Base URL of your Stratagems API instance (e.g., `https://api.yourdomain.com`)
+- **Host URL**: Base URL of your 8kit API instance (e.g., `https://api.yourdomain.com`)
 - **API Key**: Your application's API key (starts with `st_`)
 - **Authentication Method**: `X-API-Key` header
 
